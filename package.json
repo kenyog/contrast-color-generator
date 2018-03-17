@@ -1,0 +1,14 @@
+{
+  "name": "contrast-color-generator",
+  "version": "0.1.0",
+  "description": "generating the well contrasted color which satisfy W3C contrast ratio requirements.",
+  "main": "index.js",
+  "scripts": {
+    "test": "ava tests/*.js"
+  },
+  "author": "Kenyog <kenyog.it@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "ava": "^0.25.0"
+  }
+}
