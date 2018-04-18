@@ -40,7 +40,7 @@
               return this.generator.generate(this.inputColor.hexStr);
             },
             generator: function() {
-              return new window.contrastColor.Generator(this.parameterHue);
+              return new window.contrastColor.Generator(`+${this.parameterHue}`);
             }
           },
         });

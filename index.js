@@ -16,6 +16,12 @@ function string2srgb(str) {
 function num2Hex(v) {
   return ('00'+(Math.floor(v).toString(16))).slice(-2);
 }
+function limit(c, lower, upper) {
+  // 'c' may be a 'undefined'.
+  if (c < lower) return lower;
+  else if (upper < c) return upper;
+  else return c;
+}
 
 
 class Color {
@@ -176,13 +182,6 @@ class Color {
     return (l1+0.05) / (l2+0.05)
   }
 
-  static limit(c, lower, upper) {
-    // 'c' may be a 'undefined'.
-    if (c < lower) return lower;
-    else if (upper < c) return upper;
-    else return c;
-  }
-
   static srgb2hsl(srgb) {
     // Refer to the convertiong method of site below.
     //   https://en.wikipedia.org/wiki/HSL_and_HSV#Hue_and_chroma
@@ -214,9 +213,9 @@ class Color {
       : chroma/(1-Math.abs(2*lightness-1));
 
     return {
-      h: Color.limit(hue, 0, 360),
-      s: Color.limit(saturation, 0, 1),
-      l: Color.limit(lightness, 0, 1),
+      h: limit(hue, 0, 360),
+      s: limit(saturation, 0, 1),
+      l: limit(lightness, 0, 1),
     };
   }
 
@@ -254,9 +253,9 @@ class Color {
 
     let min = L - chroma/2;
     return {
-      r: Color.limit(r1+min, 0, 1),
-      g: Color.limit(g1+min, 0, 1),
-      b: Color.limit(b1+min, 0, 1),
+      r: limit(r1+min, 0, 1),
+      g: limit(g1+min, 0, 1),
+      b: limit(b1+min, 0, 1),
     };
   }
 
@@ -274,10 +273,29 @@ class Color {
 
 }
 
+function makeHueFunction(outputHue) {
+  let func = () => 0;
+
+  if (typeof outputHue === 'number') {
+    func = () => outputHue;
+  } else if (typeof outputHue === 'string') {
+    if (/^[\+-]\d+$/.test(outputHue)) {
+      let adder = parseInt(outputHue)
+      func = (inputColor) => inputColor.hue + adder;
+    } else if (/^\d+$/.test(outputHue)) {
+      let h = parseInt(outputHue);
+      func = () => h;
+    }
+  } else {
+    func = () => 0;
+  }
+  return (h) => ((func(h)%360)+360)%360;
+}
+
 
 class Generator {
-  constructor(targetHue) {
-    this.targetHue = targetHue;
+  constructor(outputHue) {
+    this.targetHue = makeHueFunction(outputHue);
     this.searchToBrighterFirst = true;
     this.minRatio = 4.5;
   }
@@ -294,7 +312,7 @@ class Generator {
       // Brighter color searching.
 
       let initialTarget = new Color(baseColor);
-      initialTarget.hue = this.targetHue;
+      initialTarget.hue = this.targetHue(baseColor);
 
       var target = searchBrighterColor(luminance, initialTarget, this.minRatio);
 
@@ -302,7 +320,7 @@ class Generator {
       // Darker color searching.
 
       let initialTarget = new Color(baseColor);
-      initialTarget.hue = this.targetHue;
+      initialTarget.hue = this.targetHue(baseColor);
 
       var target = searchDarkerColor(luminance, initialTarget, this.minRatio);
 
