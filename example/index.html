@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <meta charset="utf-8">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//cdn.jsdelivr.net/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <link rel="shortcut icon" href="">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <script src="./vue-color-2.4.5/vue-color.min.js"></script>
+
+    <link rel="stylesheet" href="./index.css">
+    <script src="../index.js"></script>
+    <script>
+      window.onload = () => {
+        vueapp = new Vue({
+          el: '#app',
+          components: {
+            'colorpicker': VueColor.Chrome,
+          },
+          data: {
+            description: '',
+            pickedColor: '#ff0300',
+            showInputPicker: false,
+            parameterHue: 0,
+          },
+          computed: {
+            inputColor: function() {
+              return new window.contrastColor.Color(this.pickedColor);
+            },
+            outputColor: function() {
+              return this.generator.generate(this.inputColor.hexStr);
+            },
+            generator: function() {
+              return new window.contrastColor.Generator(this.parameterHue);
+            }
+          },
+        });
+
+        var elem = document.querySelector('.dropdown-trigger');
+        var instance = M.Dropdown.init(elem, {constrainWidth: false, coverTrigger: false, closeOnClick:false});
+      };
+    </script>
+  </head>
+  <body style="position: flex;">
+    <div id="app" class="container" style="width: 800px; height:600px">
+      <div class="row">
+        <div class="col s4">
+          <div class="card">
+            <div class="card-image">
+              <img height="60px"  v-bind:style="{backgroundColor: inputColor.hexStr}">
+            </div>
+            <div id="input" class="card-content">
+              <span class="card-title">Input Color</span>
+              <a class="dropdown-trigger btn" href="#" data-target="inputpicker">
+                click
+              </a>
+              <div id="inputpicker" class="dropdown-content">
+                <colorpicker value="pickedColor" @input="v => {pickedColor = v.hex;}"></colorpicker>
+              </div>
+              <div style="width:80%;">
+                <p>Red: {{Math.floor(inputColor.red*255)}}</p>
+                <p>Green: {{Math.floor(inputColor.green*255)}}</p>
+                <p>Blue: {{Math.floor(inputColor.blue*255)}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col s4">
+          <div class="card">
+            <div id="parameter" class="card-content">
+              <span class="card-title">Parameters</span>
+              <div class="card-content">
+                <p class="range-field">
+                <label>OutputHue: <input type="range" min="0" max="360" v-model="parameterHue"/></label>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col s4">
+          <div class="card">
+            <div class="card-image">
+              <img height="60px"  v-bind:style="{backgroundColor: outputColor.hexStr}">
+            </div>
+            <div id="output" class="card-content">
+              <span class="card-title">Output color</span>
+              <div style="width:80%;">
+                <p>Red: {{Math.floor(outputColor.red*255)}}</p>
+                <p>Green: {{Math.floor(outputColor.green*255)}}</p>
+                <p>Blue: {{Math.floor(outputColor.blue*255)}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col s12">
+          <div class="card">
+            <div id="result" class="box card-content" v-bind:style="{backgroundColor: inputColor.hexStr, color: outputColor.hexStr}">
+              <span class="card-title">Example of foregound and background</span>
+              <p>吾輩は猫である。名前はまだ無い。</p>
+              <p>どこで生れたかとんと見当がつかぬ。何でも薄暗いじめじめした所でニャーニャー泣いていた事だけは記憶している。吾輩はここで始めて人間というものを見た。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

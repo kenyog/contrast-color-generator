@@ -24,13 +24,13 @@ const THRESHOLD = 1.0/128;
 }
 
 const test = require('ava');
-const { ContrastColorGenerator, Color } = require('../index');
+const { Generator, Color } = require('../index');
 
 
 
 test( async function gen_test_01(t) {
   
-  let generator = new ContrastColorGenerator(90);
+  let generator = new Generator(90);
 
   let base = new Color({r:0.5, g:0.0, b:0.0});
   let ccolor = generator.generate(base);
@@ -45,7 +45,7 @@ test( async function gen_test_01(t) {
 
 test( async function gen_test_02(t) {
   
-  let generator = new ContrastColorGenerator(270);
+  let generator = new Generator(270);
 
   let base = new Color({r:0.0, g:0.2, b:0.5});
   let ccolor = generator.generate(base);
@@ -60,7 +60,7 @@ test( async function gen_test_02(t) {
 
 test( async function gen_test_03(t) {
   
-  let generator = new ContrastColorGenerator(270);
+  let generator = new Generator(270);
 
   let base = new Color({r:0.3, g:0.5, b:0.5});
   let ccolor = generator.generate(base);

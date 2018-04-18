@@ -1,10 +1,20 @@
 
-// Nodes.js modules.
-const assert = require('assert');
+(function() {
+'use strict';
 
+if (typeof module === 'object' && typeof module.exports === 'object') {
+  // Nodes.js modules.
+  var assert = require('assert');
+} else {
+  var assert = () => {};
+}
 
 
 function string2srgb(str) {
+}
+
+function num2Hex(v) {
+  return ('00'+(Math.floor(v).toString(16))).slice(-2);
 }
 
 
@@ -13,6 +23,11 @@ class Color {
     this.hsl = null;
     this.srgb = null;
     if (typeof obj === 'string') {
+      if (obj.startsWith('#')) {
+        this.srgb = Color.hexStr2srgb(obj);
+      } else {
+        assert(false);
+      }
     } else if (obj instanceof Color) {
       this.hsl = obj.hsl;
       this.srgb = obj.srgb;
@@ -62,6 +77,13 @@ class Color {
   get blue() {
     this.ensureSrgb();
     return this.srgb.b;
+  }
+  get hexStr() {
+    this.ensureSrgb();
+    let r = num2Hex(255*this.srgb.r);
+    let g = num2Hex(255*this.srgb.g);
+    let b = num2Hex(255*this.srgb.b);
+    return `#${r}${g}${b}`;
   }
 
   set red(r) {
@@ -238,10 +260,22 @@ class Color {
     };
   }
 
+  static hexStr2srgb(str) {
+    let R = parseInt(str.substring(1, 3), 16);
+    let G = parseInt(str.substring(3, 5), 16);
+    let B = parseInt(str.substring(5, 7), 16);
+
+    return {
+      r: R/255,
+      g: G/255,
+      b: B/255,
+    };
+  }
+
 }
 
 
-class ContrastColorGenerator {
+class Generator {
   constructor(targetHue) {
     this.targetHue = targetHue;
     this.searchToBrighterFirst = true;
@@ -252,7 +286,7 @@ class ContrastColorGenerator {
     if (_baseColor instanceof Color) {
       var baseColor = _baseColor;
     } else {
-      var baseColor = new Color(baseColor);
+      var baseColor = new Color(_baseColor);
     }
     let luminance = baseColor.luminance;
 
@@ -346,8 +380,13 @@ function searchDarkerColor(baseLuminance, initialTarget, targetRatio) {
 }
 
 
-module.exports = {
-  ContrastColorGenerator: ContrastColorGenerator,
-  Color: Color,
-};
+if (typeof module === 'object' && typeof module.exports === 'object') {
+  var assert = require('assert');
+  module.exports = { Generator, Color };
+} else {
+  var assert = () => {};
+  window.contrastColor = { Generator, Color };
+}
+
+})();
 
