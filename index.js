@@ -68,7 +68,7 @@ class Color {
   }
   checkComponentRange(c, lower, upper) {
     if (c < lower || upper < c) {
-      throw new Exception('srgb component must be in range 0.0~1.0.');
+      throw new Error('srgb component must be in range 0.0~1.0.');
     }
   }
 
@@ -294,10 +294,9 @@ function makeHueFunction(outputHue) {
 
 
 class Generator {
-  constructor(outputHue) {
-    this.targetHue = makeHueFunction(outputHue);
-    this.searchToBrighterFirst = true;
-    this.minRatio = 4.5;
+  constructor(targetHue, opt) {
+    this.targetHue = makeHueFunction(targetHue);
+    this.opt = Generator.makeOption(opt);
   }
 
   generate(_baseColor) {
@@ -308,29 +307,61 @@ class Generator {
     }
     let luminance = baseColor.luminance;
 
-    if ( Color.contrastRatio(1.0, luminance) > this.minRatio ) {
+    let whiteBlackSatisfy
+      = (Color.contrastRatio(1.0, luminance) > this.opt.minimumRatio)? 2:0
+      + (Color.contrastRatio(luminance, 0.0) > this.opt.minimumRatio)? 1:0;
+
+    let searchTarget = Generator._MAP[this.opt.searchPrior][whiteBlackSatisfy];
+
+    if (searchTarget === 'Br') {
       // Brighter color searching.
 
       let initialTarget = new Color(baseColor);
       initialTarget.hue = this.targetHue(baseColor);
 
-      var target = searchBrighterColor(luminance, initialTarget, this.minRatio);
+      var target = searchBrighterColor(luminance, initialTarget, this.opt.minimumRatio);
 
-    } else if ( Color.contrastRatio(luminance, 0.0) > this.minRatio ) {
+    } else if (searchTarget === 'Dr') {
       // Darker color searching.
 
       let initialTarget = new Color(baseColor);
       initialTarget.hue = this.targetHue(baseColor);
 
-      var target = searchDarkerColor(luminance, initialTarget, this.minRatio);
+      var target = searchDarkerColor(luminance, initialTarget, this.opt.minimumRatio);
 
     } else {
-      throw new Exception('No color exist which satisfies a requirement.');
+      throw new Error('No color exist which satisfies a requirement.');
     }
 
     return target;
   }
+
+  static makeOption(userOpt) {
+    if (!userOpt) {
+      userOpt = {};
+    }
+    return Object.assign({}, Generator.DEFAULT_OPT, userOpt);
+  }
 }
+
+Generator.BRIGHTER_FIRST = 0;
+Generator.DARKER_FIRST   = 1;
+Generator.BRIGHTER_ONLY  = 2;
+Generator.DARKER_ONLY    = 3;
+Generator.DEFAULT_OPT = Object.seal({
+  // If the min ratio was greater than sqrt(21),
+  // there may be no colors which satisfy the parameters.
+  minimumRatio: 4.5,
+  searchPrior: Generator.BRIGHTER_FIRST,
+});
+Generator._MAP = [
+  //  BrDr   BrDr   BrDr   BrDr   
+  //  x/x    x/o    o/x    o/o 
+  [   'NG',  'Dr',  'Br',  'Br' ],  // BRIGHTER_FIRST 
+  [   'NG',  'Dr',  'Br',  'Dr' ],  // DARKER_FIRST   
+  [   'NG',  'NG',  'Br',  'Br' ],  // BRIGHTER_ONLY  
+  [   'NG',  'Dr',  'NG',  'Dr' ],  // DARKER_ONLY    
+];
 
 
 function binarySearch_recursive(func, lower, upper, requirement) {
@@ -407,4 +438,9 @@ if (typeof module === 'object' && typeof module.exports === 'object') {
 }
 
 })();
+
+
+
+
+
 

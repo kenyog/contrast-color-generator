@@ -13,7 +13,6 @@
       <script src="//cdn.jsdelivr.net/html5shiv/3.7.2/html5shiv.min.js"></script>
       <script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
-    <link rel="shortcut icon" href="">
     <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
     <script src="./vue-color-2.4.5/vue-color.min.js"></script>
 
@@ -31,29 +30,48 @@
             pickedColor: '#ff0300',
             showInputPicker: false,
             parameterHue: 0,
+            parameterHueRelative: true,
+            searchPrior: 'BRIGHTER_FIRST',
+            minimumRatio: 4.5,
+            error: null,
           },
           computed: {
             inputColor: function() {
               return new window.contrastColor.Color(this.pickedColor);
             },
             outputColor: function() {
-              return this.generator.generate(this.inputColor.hexStr);
+              try {
+                this.error = null;
+                return this.generator.generate(this.inputColor.hexStr);
+              } catch(e) {
+                this.error = e;
+                return new window.contrastColor.Color('#808080');
+              }
+            },
+            targetHue: function() {
+              return (this.parameterHueRelative)
+                ? `+${this.parameterHue}`
+                : this.parameterHue;
             },
             generator: function() {
-              return new window.contrastColor.Generator(`+${this.parameterHue}`);
+              let prior = window.contrastColor.Generator[this.searchPrior];
+              return new window.contrastColor.Generator(this.targetHue, {searchPrior: prior, minimumRatio: this.minimumRatio});
             }
           },
         });
 
         var elem = document.querySelector('.dropdown-trigger');
         var instance = M.Dropdown.init(elem, {constrainWidth: false, coverTrigger: false, closeOnClick:false});
+
+        var elem = document.querySelector('select');
+        var instance = M.FormSelect.init(elem, {});
       };
     </script>
   </head>
   <body style="position: flex;">
-    <div id="app" class="container" style="width: 800px; height:600px">
+    <div id="app" class="container" style="width: 900px; height:600px">
       <div class="row">
-        <div class="col s4">
+        <div class="col s3">
           <div class="card">
             <div class="card-image">
               <img height="60px"  v-bind:style="{backgroundColor: inputColor.hexStr}">
@@ -61,7 +79,7 @@
             <div id="input" class="card-content">
               <span class="card-title">Input Color</span>
               <a class="dropdown-trigger btn" href="#" data-target="inputpicker">
-                click
+                Choose Color
               </a>
               <div id="inputpicker" class="dropdown-content">
                 <colorpicker value="pickedColor" @input="v => {pickedColor = v.hex;}"></colorpicker>
@@ -74,19 +92,47 @@
             </div>
           </div>
         </div>
-        <div class="col s4">
+        <div class="col s6">
           <div class="card">
             <div id="parameter" class="card-content">
               <span class="card-title">Parameters</span>
               <div class="card-content">
+                <div class="switch">
+                  <label>
+                    Absolute
+                    <input v-model="parameterHueRelative" type="checkbox">
+                    <span class="lever"></span>
+                    Relative
+                  </label>
+                </div>
                 <p class="range-field">
-                <label>OutputHue: <input type="range" min="0" max="360" v-model="parameterHue"/></label>
+                <label>Target Hue {{JSON.stringify(targetHue)}}
+                  <input type="range" min="0" max="360" v-model="parameterHue"/>
+                </label>
                 </p>
+                <p class="range-field">
+                <label>Minimum contrast ratio {{minimumRatio}}</label>
+                <input type="range" min="1" max="21" step="0.1" v-model="minimumRatio"/>
+                </p>
+                <div class="input-field">
+                  <select v-model="searchPrior">
+                    <option value="BRIGHTER_FIRST" disabled selected>Brighter/Darker priority</option>
+                    <option>BRIGHTER_FIRST</option>
+                    <option>DARKER_FIRST</option>
+                    <option>BRIGHTER_ONLY</option>
+                    <option>DARKER_ONLY</option>
+                  </select>
+                  <label>Brigher/Darker priority</label>
+                </div>
+              </div>
+              <div class="card-content">
+                <ul>
+                </ul>
               </div>
             </div>
           </div>
         </div>
-        <div class="col s4">
+        <div class="col s3">
           <div class="card">
             <div class="card-image">
               <img height="60px"  v-bind:style="{backgroundColor: outputColor.hexStr}">
