@@ -45,6 +45,12 @@ This is an example is generating contrast color whose 'hue' is 180°.
 </script>
 ```
 
+## Demo
+
+This is the demo page of this module.
+
+https://kenyog.github.io/contrast-color-generator/docs/example/index.html
+
 ## Contribution
 
 Welcome.
