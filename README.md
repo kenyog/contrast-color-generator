@@ -9,6 +9,8 @@ Javascript module for automatically generating well contrasted color with a colo
 This module generating well contrasted color which satisfy W3C guideline.
 You can set minimum contrast ratio and source color as a parameter.
 
+[Demo](https://kenyog.github.io/contrast-color-generator/docs/example/index.html)
+
 
 ## Install
 
@@ -22,7 +24,7 @@ $ npm install contrast-color-generator
 
 ### in Node.js
 
-This is an example is generating contrast color whose 'hue' is 180°.
+This is an example is generating contrast color whose 'hue' is 180°
 ```javascript
 const { Generator } = require('contrast-color-generator');
 let generator = new Generator(180);
@@ -44,6 +46,19 @@ This is an example is generating contrast color whose 'hue' is 180°.
   let foregroundColor = gen.generate(inputColor).hexStr;
 </script>
 ```
+
+## Principle
+
+This module searches a color which has high contrast ratio against a input
+color from HSL color space.
+To calculate contrast ratios, it uses the definition of contrast ratio in [W3C Guideline](https://www.w3.org/TR/2008/REC-WCAG20-20081211/#contrast-ratiodef)
+
+In searching, H(specified by parameter) and S(of input color) are fixed,
+and it searches L which satisfies condition of contrast ratio using binary search.
+
+By default, the first searching direction towards a brighter, And the second one towards darker.
+these behavior can be changed by a parameter.
+
 
 ## Demo
 
